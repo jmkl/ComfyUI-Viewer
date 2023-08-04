@@ -1,0 +1,1 @@
+const { emit,listen } = window.__TAURI__.event;
