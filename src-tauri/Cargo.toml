@@ -1,6 +1,6 @@
 [package]
 name = "comfyui-viewer"
-version = "0.0.1"
+version = "0.0.2"
 description = "ComfyUI viewer"
 authors = ["dcsms"]
 license = ""
