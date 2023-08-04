@@ -5,22 +5,28 @@
     "devPath": "../dist",
     "distDir": "../dist",
     "withGlobalTauri": true
+
   },
   "package": {
     "productName": "comfyui-viewer",
     "version": "0.0.1"
   },
+  
   "tauri": {
     "allowlist": {
       "all": false,
+    
       "shell": {
         "all": false,
         "open": true
       },
+      
       "window": {
-        "all": false,
-        "startDragging": true
+        "all": true
+      
+
       }
+      
     },
     "bundle": {
       "active": true,

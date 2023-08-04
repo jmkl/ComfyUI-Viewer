@@ -1,60 +1,68 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
+
 use tauri_plugin_window_state::Builder as windowStatePlugin;
 mod window;
 use window::get_window;
-use std::thread;
-use std::process::{Command, Stdio};
-use std::path::Path;
-use std::io::{BufReader, BufRead};
-use tauri::{Window};
-fn exec_stream<P: AsRef<Path>>(binary: P, args: Vec<&'static str>,window:&Window) {
-    let mut isrun = false;
-    let mut cmd = Command::new(binary.as_ref())
-        .args(&args)
-        .stdout(Stdio::piped())
-        .spawn()
-        .unwrap();
+use std::fs;
+use tauri::{Manager,State,Window};
 
-    {
-        let stdout = cmd.stdout.as_mut().unwrap();
-        let stdout_reader = BufReader::new(stdout);
-        let stdout_lines = stdout_reader.lines();
-
-        for line in stdout_lines {
-            window.emit("msg", Payload { message: line.unwrap() }).unwrap();
-            if !isrun{
-               
-                
-            }
-            isrun = true;
-           
-        }
-    }
-
-    cmd.wait().unwrap();
-}
+use std::sync::OnceLock;
+static WINDOW: OnceLock<Window> = OnceLock::new();
 
 #[derive(Clone, serde::Serialize)]
 struct Payload {
-  message: String,
+  message: String
 }
 
+#[tauri::command]
+fn load_workflow()->Vec<String> {
+    let wf_dir = ".\\workflows";
+    fs::create_dir_all(wf_dir).expect("failed to create");
+    let paths = fs::read_dir(wf_dir)
+        .unwrap()
+        .map(|entry| {
+            let entry = entry.unwrap();          
+            let entry_path = entry.path();          
+            let file_name = entry_path.file_name().unwrap();          
+            let file_name_as_str = file_name.to_str().unwrap();          
+            let file_name_as_string = String::from(file_name_as_str);          
+            file_name_as_string
+          })
+        .collect::<Vec<_>>();
+    paths
+
+}
+
+#[tauri::command]
+fn apply_workflow(data:&str) {
+    let fpath = format!(".\\workflows\\{}",data);
+    println!("{}",fpath);
+    let contents = fs::read_to_string(fpath).expect("Should have been able to read the file");
+
+        WINDOW.get().expect("window avail").emit("msg", Payload{message:contents}).expect("failed");
+
+    
+    
+
+}
 
 fn launch_ui(){
    
     let ui = tauri::Builder::default()
+    .invoke_handler(tauri::generate_handler![load_workflow,apply_workflow])
     .plugin(windowStatePlugin::default().build())
     .setup(|app| {
+        
+        let mwindow = get_window(app);
+        mwindow.show().unwrap();
+        _ = WINDOW.set(mwindow);
+      
+      
+        
 
-        let mainwindow = get_window(app);
-        // _window.open_devtools();
-        mainwindow.show().unwrap();
-        // thread::spawn(move ||{
-        //     exec_stream("G:\\STABLEDIFF\\COMFYUI\\python_embeded\\python.exe", vec!("-s", "G:\\STABLEDIFF\\COMFYUI\\ComfyUI\\main.py","--windows-standalone-build","--lowvram"),&mainwindow);
-        // });
-        
-        
+       
         Ok(())
     });
 
@@ -65,9 +73,7 @@ fn launch_ui(){
 }
 
 fn main() {
-     
-    
-  
+
 
     launch_ui();
 
