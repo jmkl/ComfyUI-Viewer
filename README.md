@@ -4,4 +4,4 @@ simple browser to view [ComfyUI ](https://github.com/comfyanonymous/ComfyUI) wri
 
 place your workflow json file in `workflows` folder *(next to the executable file)*
 
-![image info](./images/comfyui-viewer.png)
+![image info](./images/comfyui-viewer_play.gif)
