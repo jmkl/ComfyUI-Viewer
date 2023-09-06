@@ -1,0 +1,14 @@
+[package]
+name = "comfyui_viewer"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde = "1.0.188"
+serde_json = "1.0.105"
+wry = "0.31.1"
+[profile.release.package.wry]
+debug = true
+debug-assertions = true
