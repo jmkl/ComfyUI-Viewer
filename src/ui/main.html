@@ -1,0 +1,55 @@
+
+<div class="moveme">Dropme</div>
+    <div class="titlebar">
+    <div class="drag-region">(ComfyUI,)</div>
+    <div class="titlebar-button-group">
+        <div class="titlebar-button" onclick="window.ipc.postMessage('minimize')">
+            <img src="https://api.iconify.design/codicon:chrome-minimize.svg" />
+        </div>
+        <div class="titlebar-button" onclick="window.ipc.postMessage('maximize')">
+            <img src="https://api.iconify.design/codicon:chrome-maximize.svg" />
+        </div>
+        <div class="titlebar-button" id="close" onclick="window.ipc.postMessage('close')">
+            <img src="https://api.iconify.design/codicon:close.svg" />
+        </div>
+    </div>
+</div>
+<main>
+    <h4> WRYYYYYYYYYYYYYYYYYYYYYY! </h4>
+</main>
+<script>
+    document.addEventListener('mousedown', (e) => {
+        if (e.target.classList.contains('drag-region') && e.buttons === 1) {
+            e.detail === 2
+                ? window.ipc.postMessage('maximize')
+                : window.ipc.postMessage('drag_window');
+        }
+    })
+    document.addEventListener('touchstart', (e) => {
+        if (e.target.classList.contains('drag-region')) {
+            window.ipc.postMessage('drag_window');
+        }
+    })
+</script>
+    <div id="comfyuiviewer-content">
+      <button class='delete_wf workflowbtn' >Delete</button>
+      <select id="wf">
+      </select>
+      <button class='apply_wf workflowbtn' >Apply</button>
+      <button class='apply_wf workflowbtn' >Append</button>
+      <button class='save_wf workflowbtn' >Save Current Workflow</button>          
+    </div>
+    <div class="log">
+    <span class="log_progress"></span>
+    <div class="log_panel">
+        <span class="log_text"></span>
+      </div>
+</div>
+    <div class="comfyuiviewer-modal">
+ 
+    <div class="modal-content">      
+      <input class="wf_filename" type="text" placeholder="workflows name"/>
+      <button class='workflowbtn commit_wf' >Save</button>
+      <button class='workflowbtn cancel_wf' >Cancel</button>
+      </div>
+    </div>

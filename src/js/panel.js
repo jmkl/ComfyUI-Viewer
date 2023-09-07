@@ -1,23 +1,56 @@
 (async function () {
-    document.addEventListener("DOMContentLoaded", () => {
+  document.addEventListener("DOMContentLoaded", () => {
 
 
 
 
-        if (location.href.includes("main.html")) return;
-        function create_log_text(text) {
-            var div = document.createElement("span");
-            div.textContent = text;
-            div.className = "log_text";
-            return div;
-        }
+    if (location.href.includes("main.html")) return;
+    function create_log_text(text) {
+      var div = document.createElement("span");
+      div.textContent = text;
+      div.className = "log_text";
+      return div;
+    }
 
-        const cuiViewerHtml = `
+    const cuiViewerHtml = `
+    
+        <div class="titlebar">
+        <div class="drag-region">(ComfyUI,)</div>
+        <div class="titlebar-button-group">
+            <div class="titlebar-button" onclick="window.ipc.postMessage('minimize')">
+                <img src="https://api.iconify.design/codicon:chrome-minimize.svg" />
+            </div>
+            <div class="titlebar-button" onclick="window.ipc.postMessage('maximize')">
+                <img src="https://api.iconify.design/codicon:chrome-maximize.svg" />
+            </div>
+            <div class="titlebar-button" id="close" onclick="window.ipc.postMessage('close')">
+                <img src="https://api.iconify.design/codicon:close.svg" />
+            </div>
+        </div>
+    </div>
+    <main>
+        <h4> WRYYYYYYYYYYYYYYYYYYYYYY! </h4>
+    </main>
+    <script>
+        document.addEventListener('mousedown', (e) => {
+            if (e.target.classList.contains('drag-region') && e.buttons === 1) {
+                e.detail === 2
+                    ? window.ipc.postMessage('maximize')
+                    : window.ipc.postMessage('drag_window');
+            }
+        })
+        document.addEventListener('touchstart', (e) => {
+            if (e.target.classList.contains('drag-region')) {
+                window.ipc.postMessage('drag_window');
+            }
+        })
+    </script>
         <div id="comfyuiviewer-content">
           <button class='delete_wf workflowbtn' >Delete</button>
           <select id="wf">
           </select>
           <button class='apply_wf workflowbtn' >Apply</button>
+          <button class='append_wf workflowbtn' >Append</button>
           <button class='save_wf workflowbtn' >Save Current Workflow</button>          
         </div>
         <div class="log">
@@ -36,9 +69,63 @@
         </div>
         `;
 
-        const cuiViewerStyle = `
+    const cuiViewerStyle = `
         body{
           background:#111;
+        }
+        .moveme{
+          user-select:none;
+          position:absolute;
+          background-color:#ffdd00;
+          padding:10px;
+        }
+        .titlebar {
+          font-weight:900;
+          position: absolute;
+          top: 0px;
+          left: 0px;
+          width: 100%;
+          z-index: 999999;
+          display: flex;
+          flex-flow:row wrap;        
+          backdrop-filter: blur(30px);
+          background: #00000042;
+          color: white;
+          user-select: none;
+          box-shadow: 0 10px 10px #00000055;    
+      
+      
+        }
+        .drag-region{
+          font-family: 'Roboto'!important;
+          font-weight: 900;
+          cursor:grab;
+          flex-grow:1;
+          padding:10px 20px
+        }
+        .titlebar-button-group{
+          padding:5px 15px
+        }
+
+        .titlebar-button {
+          cursor:pointer;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 30px;
+            height: 30px;
+        }
+
+        .titlebar-button:hover {
+            background: #3b3b3b;
+        }
+
+        .titlebar-button#close:hover {
+            background: #da3d3d;
+        }
+
+        .titlebar-button img {
+            filter: invert(100%);
         }
         #comfyuiviewer-content{
           
@@ -50,8 +137,8 @@
           gap:5px;
           justify-content:center;
           align-items:center;
-          top:20px;
-          left:20px;
+          top:80px;
+          left:40px;
           
           
         }  
@@ -92,24 +179,23 @@
         padding: 0.7em 2em;
         -webkit-appearance: none;
         appearance: none;
-        background-color: #ff0081;
+        background-color: #ff2124;
         color: #fff;
         border-radius: 4px;
         border: none;
         cursor: pointer;
-        position: relative;
-        transition: transform ease-in 0.1s, box-shadow ease-in 0.25s;
-        box-shadow: 0 2px 25px rgba(255, 0, 130, 0.5);
+        white-space: nowrap;
+        box-shadow: 0 2px 25px #ff212430;
       }
     
       .workflowbtn:active{
         transform: scale(0.9);
-        background-color: #e60074;
+        background-color: #ff2255;
         box-shadow: 0 2px 25px rgba(255, 0, 130, 0.2);
       }
       .comfyuiviewer-modal{
         display: none; 
-        z-index: 100;
+        z-index: 1000;
         position:absolute;
         width:100%;
         height:100%;
@@ -123,7 +209,7 @@
         gap:2px;
         display:flex;
         width:350px;
-        margin:30px auto;
+        margin:90px auto;
       }
       .modal-content > input[type="text"]{
         background:transparent;
@@ -166,103 +252,145 @@
     
         `;
 
-        const cuiViewerDiv = document.createElement("div");
-        cuiViewerDiv.className = "comfyuiviewer";
-        cuiViewerDiv.innerHTML = cuiViewerHtml;
-        document.body.appendChild(cuiViewerDiv);
-        const cuiViewerStyleElement = document.createElement("style");
-        cuiViewerStyleElement.innerText = cuiViewerStyle;
-        document.head.appendChild(cuiViewerStyleElement);
-        var wf_dropdown = document.getElementById("wf");
-        document.querySelector(".apply_wf").addEventListener("click", () => {
-            // invoke("apply_workflow", { data: wf_dropdown.value });
-            const value = { key: "apply", data: "applying me bitch" }
-            window.ipc.postMessage(JSON.stringify(value))
-        });
+    const cuiViewerDiv = document.createElement("div");
+    cuiViewerDiv.className = "comfyuiviewer";
+    cuiViewerDiv.innerHTML = cuiViewerHtml;
+    document.body.appendChild(cuiViewerDiv);
+    const cuiViewerStyleElement = document.createElement("style");
+    cuiViewerStyleElement.innerText = cuiViewerStyle;
+    document.head.appendChild(cuiViewerStyleElement);
+    var wf_dropdown = document.getElementById("wf");
+    document.querySelector(".apply_wf").addEventListener("click", () => {
 
-
-        var modal = document.querySelector(".comfyuiviewer-modal");
-        var wf_filename = document.querySelector(".wf_filename");
-        document.querySelector(".save_wf").addEventListener("click", () => {
-            modal.style.display = "block";
-
-
-
-        });
-        document.querySelector(".delete_wf").addEventListener("click", () => {
-            // invoke("delete_workflow", { filename: wf_dropdown.value }).then((result) => {
-            //     wf_dropdown.remove(wf_dropdown.selectedIndex);
-            // });
-            const value = { key: "delete", data: "delete me bitch" }
-            window.ipc.postMessage(JSON.stringify(value))
-
-        });
-
-        document.querySelector(".cancel_wf").addEventListener("click", () => {
-            modal.style.display = "none";
-
-        });
-
-
-        document.querySelector(".commit_wf").addEventListener("click", () => {
-
-            var name = wf_filename.value;
-            if (name.includes("json")) {
-                name = name.replace(".json", "");
-            }
-            console.log(name);
-            if (name === "")
-                return;
-            modal.style.display = "none";
-            const json = JSON.stringify(app.graph.serialize(), null, 2);
-            const value = { key: "save", data: "same me bitch" }
-            window.ipc.postMessage(JSON.stringify(value))
-            // invoke("save_workflow", { data: json, filename: name }).then((result) => {
-            //     var opt = document.createElement("option");
-            //     opt.value = result;
-            //     console.log(result);
-            //     opt.textContent = result;
-            //     wf_dropdown.appendChild(opt);
-            // });
-        });
-
-
-
-
-
-        // invoke("load_workflow").then((result) => {
-        //     result.forEach((element) => {
-        //         var opt = document.createElement("option");
-        //         opt.value = element;
-        //         opt.textContent = element;
-        //         wf_dropdown.appendChild(opt);
-        //     });
-        // });
-
-        var logpanel = document.querySelector(".log_panel");
-        var logprogress = document.querySelector(".log_progress");
-        // listen("log_output", (e) => {
-
-        //     const msg = e.payload.message;
-        //     if (msg == "") return;
-
-
-        //     while (logpanel.childNodes.length > 10) {
-        //         logpanel.removeChild(logpanel.firstChild);
-        //     }
-        //     if (msg.includes("it\/s") || msg.includes("s\/it")) {
-        //         logprogress.textContent = msg;
-        //     } else {
-        //         logpanel.append(create_log_text(`${e.payload.message}`));
-        //         logpanel.append(document.createElement("br"));
-        //     }
-
-
-
-
-        // })
-        // listen("msg", (e) => {
-        //     window.app.loadGraphData(JSON.parse(e.payload.message));
-        // });
+      const value = { key: "apply", data: { filename: wf_dropdown.value, data: "" } }
+      window.ipc.postMessage(JSON.stringify(value));
     });
+
+
+    var modal = document.querySelector(".comfyuiviewer-modal");
+    var wf_filename = document.querySelector(".wf_filename");
+    document.querySelector(".save_wf").addEventListener("click", () => {
+      modal.style.display = "block";
+
+
+
+    });
+    document.querySelector(".delete_wf").addEventListener("click", () => {
+      // invoke("delete_workflow", { filename: wf_dropdown.value }).then((result) => {
+      //     wf_dropdown.remove(wf_dropdown.selectedIndex);
+      // });
+      const value = { key: "delete", data: { filename: wf_dropdown.value, data: "" } }
+      console.log(wf_dropdown.value);
+      window.ipc.postMessage(JSON.stringify(value))
+
+    });
+
+    document.querySelector(".cancel_wf").addEventListener("click", () => {
+      modal.style.display = "none";
+
+    });
+    //hide for now
+    document.querySelector(".append_wf").style.display = "none";
+    document.querySelector(".append_wf").addEventListener("click", () => {
+
+      const value = { key: "append", data: { filename: wf_dropdown.value, data: "" } }
+      window.ipc.postMessage(JSON.stringify(value));
+    });
+
+
+    document.querySelector(".commit_wf").addEventListener("click", () => {
+
+      var name = wf_filename.value;
+      if (name.includes("json")) {
+        name = name.replace(".json", "");
+      }
+      if (name === "")
+        return;
+      modal.style.display = "none";
+      const json = JSON.stringify(app.graph.serialize(), null, 2);
+      const value = { key: "save", data: { filename: name, data: json } }
+      window.ipc.postMessage(JSON.stringify(value))
+
+    });
+
+
+
+
+
+    // invoke("load_workflow").then((result) => {
+    //     result.forEach((element) => {
+    //         var opt = document.createElement("option");
+    //         opt.value = element;
+    //         opt.textContent = element;
+    //         wf_dropdown.appendChild(opt);
+    //     });
+    // });
+
+    var logpanel = document.querySelector(".log_panel");
+    var logprogress = document.querySelector(".log_progress");
+    // listen("log_output", (e) => {
+
+    //     const msg = e.payload.message;
+    //     if (msg == "") return;
+
+
+    //     while (logpanel.childNodes.length > 10) {
+    //         logpanel.removeChild(logpanel.firstChild);
+    //     }
+    //     if (msg.includes("it\/s") || msg.includes("s\/it")) {
+    //         logprogress.textContent = msg;
+    //     } else {
+    //         logpanel.append(create_log_text(`${e.payload.message}`));
+    //         logpanel.append(document.createElement("br"));
+    //     }
+
+
+
+
+    // })
+    // listen("msg", (e) => {
+    //     window.app.loadGraphData(JSON.parse(e.payload.message));
+    // });
+  });
+
+  document.addEventListener('mousedown', (e) => {
+    if (e.target.classList.contains('drag-region') && e.buttons === 1) {
+      e.detail === 2
+        ? window.ipc.postMessage('maximize')
+        : window.ipc.postMessage('drag_window');
+    }
+  })
+  document.addEventListener('touchstart', (e) => {
+    if (e.target.classList.contains('drag-region')) {
+      window.ipc.postMessage('drag_window');
+    }
+  })
+
+  let ismoving = true;
+  const moveme_listener = function (e) {
+    if (ismoving) {
+      let move_me = document.querySelector('.moveme');
+      let left = e.offsetX;
+      let top = e.offsetY;
+      move_me.style.left = (left - 5) + 'px';
+      move_me.style.top = (top - 5) + 'px';
+    }
+  }
+
+
+  setTimeout(() => {
+
+    const value = { key: "load", data: { filename: "", data: "" } }
+    window.ipc.postMessage(JSON.stringify(value));
+
+
+  }, 500);
+
+
+
+  // const result = document.addEventListener("mousemove", moveme_listener);
+  // document.querySelector('.moveme').addEventListener("click", () => {
+  //   document.removeEventListener("mousemove", moveme_listener)
+  //   document.querySelector('.moveme').style.display = "none";
+  // })
 })();
